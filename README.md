@@ -14,7 +14,7 @@ Developed with ❤️ by **[IITDEVELOPER](https://github.com/iitdeveloper-git)**
 [![Version](https://img.shields.io/badge/version-0.1.0-6366f1?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Security Audited](https://img.shields.io/badge/Security-Zero--Trust%20Keys-success?style=for-the-badge&logo=shield)](#-security--privacy-first)
+[![Keys](https://img.shields.io/badge/Keys-SecretStorage-success?style=for-the-badge&logo=shield)](#️-security--privacy-first)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4?style=for-the-badge)](#-contributing)
 
 <br/>
@@ -49,25 +49,22 @@ Connect your own self-hosted or enterprise LLM endpoints directly to the **nativ
 | 🔐 **Origin-Bound Vault** | API keys live solely inside VS Code's encrypted `SecretStorage`, strictly bound to the target origin URL. |
 | ⚡ **One-Click Discovery** | Automatic `/models` endpoint discovery with fallback to manual model and context sizing. |
 | 🧪 **In-Editor Diagnostics** | Real-time connection and inference smoke tests with zero prompt or output leakage. |
-| 🦙 **Universal Compatibility** | First-class support for **Ollama**, **vLLM**, **LocalAI**, **Azure OpenAI (v1 & Legacy)**, and **OpenAI**. |
+| 🦙 **Broad Compatibility** | Speaks the **OpenAI Chat Completions** and **Responses** formats plus **Azure OpenAI (v1 & Legacy)** and **Ollama**'s OpenAI-compatible API. Servers such as vLLM or LocalAI should work if they follow the OpenAI format; verify with *Test Inference*. |
 | 📦 **Safe Export/Import** | Share endpoint configurations across your team with automatic credential stripping. |
 
 ---
 
-## 📊 Why LLM Bridge? (vs. Built-in)
+## 📊 How this relates to VS Code's built-in Custom Endpoint
 
-Recent VS Code versions include a basic `chatLanguageModels.json` custom endpoint provider. Here is how **LLM Bridge** elevates your developer experience:
+Recent VS Code versions include a built-in Custom Endpoint provider (`chatLanguageModels.json`) for Chat Completions, Responses and Anthropic Messages. **If that is enough for you, use it.** LLM Bridge is for what it does not cover:
 
-| Capability | Built-in VS Code Custom Endpoint | 🌉 LLM Bridge |
-| :--- | :---: | :---: |
-| **Native VS Code Chat Picker Integration** | ✅ | ✅ |
-| **Ollama Local Presets & Auto-Discovery** | ❌ (Manual JSON) | ✅ **1-Click Preset** |
-| **Azure OpenAI Legacy Deployments** | ❌ | ✅ **Supported** |
-| **Origin-Locked Credential Binding** | ❌ | ✅ **Strict Defense** |
-| **Workspace Settings Isolation (Anti-Hijack)** | ⚠️ Partial | ✅ **User-Scope Only** |
-| **In-Editor Connection & Inference Tests** | ❌ | ✅ **Instant Smoke Test** |
-| **Redacted, Privacy-Guaranteed Diagnostics** | ❌ | ✅ **Zero Prompt Logging** |
-| **Secret-Free Export / Import Workflows** | ❌ | ✅ **Built-in** |
+- **Azure OpenAI** v1 and legacy deployments, and an **Ollama** setup flow
+- **Model discovery** with a manual fallback, plus **connection and inference tests** from the editor
+- **Origin-bound credentials**: a stored key is only ever sent to the origin it was entered for
+- **User-settings-only endpoints**: workspace settings cannot redirect your key
+- **Redacted diagnostics** and **secret-free export/import**
+
+> This is not a feature-by-feature comparison with the built-in provider, which changes between VS Code releases.
 
 ---
 
@@ -214,10 +211,21 @@ Search `LLM Bridge:` in the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 
 ## ⚙️ Capabilities & Technical Specifications
 
-- **Streaming & Backpressure:** Native Server-Sent Events (SSE) streaming with cooperative cancellation and configurable idle/connect timeouts.
+- **Streaming:** Native Server-Sent Events (SSE) streaming with cooperative cancellation and configurable idle/connect timeouts.
 - **Resilient Retries:** Intelligent backoff for rate limits (`HTTP 429`) and transient errors (`HTTP 5xx`), honoring `Retry-After` headers.
 - **Agent Mode & Tool Calling:** Models declare `toolCalling: true`. LLM Bridge emits standard structured tool calls back to VS Code; execution and user approvals remain 100% under VS Code's native control.
 - **Token Estimation:** Fast ~4 chars/token heuristic by default with configurable `maxInputTokens` and `maxOutputTokens`.
+
+---
+
+## ⚠️ Known Limitations
+
+- **Tested against mock servers only.** The protocol adapters are verified with local test servers built from the public wire formats. No real OpenAI, Azure or Ollama endpoint was used in automated tests. Use **Test Inference** on yours.
+- **Copilot coexistence is not automatically verified.** Copilot's settings and credentials are never touched (tested in a sandbox without Copilot Chat loaded); check manually that your Copilot models and selection are unchanged.
+- **Agent mode depends on the model.** LLM Bridge only returns tool calls to VS Code; VS Code runs tools and approvals. Set `toolCalling: true` only for models that support it. Whether a model works well in Agent mode is not guaranteed.
+- **Token counts are estimates** (~4 chars/token). Tool calling and vision are never auto-detected.
+- **Not supported yet:** Anthropic Messages, reasoning/thinking output, Bedrock, Vertex. Azure legacy has no model listing: add deployment names manually.
+- **Availability** of third-party models in Chat can depend on your VS Code/Copilot plan and organization policy.
 
 ---
 
