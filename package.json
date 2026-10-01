@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "publisher": "iitdeveloper",
   "license": "MIT",
-  "icon": "media/icon.png",
+  "icon": "media/icon-256.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/iitdeveloper-git/LLMBridge.git"

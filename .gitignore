@@ -73,3 +73,6 @@ $RECYCLE.BIN/
 .cursor/
 .claude/
 .continue/
+
+# Local Python venv (not part of this project)
+.venv/
