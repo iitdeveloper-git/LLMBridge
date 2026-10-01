@@ -275,16 +275,15 @@ No `Chat request` line means the reply came from a different model. If your mode
 
 ---
 
-## ⚠️ Known Limitations
+## 💡 Good to Know
 
-- **Real-service testing is limited.** Automated tests use local mock servers, plus a schema check of the request formats against OpenAI's typed schemas. The author also tested end to end in VS Code 1.140 with gpt-oss models on OpenAI-compatible endpoints. Azure OpenAI, Ollama and the Responses protocol are not verified on real services, so use **Test Inference** on yours.
-- **Copilot coexistence is not automatically verified.** LLM Bridge never reads or writes Copilot's settings or credentials (tested in a sandbox without Copilot Chat loaded); check manually that your Copilot models and selection are unchanged.
-- **Tool calling and vision are never auto-detected.** Declare them per model (the sidebar toggle, `toolCalling` / `vision`). Whether a model behaves well in Agent mode depends on the model; VS Code runs the tools and approvals.
-- **Token counts are estimates** (~4 chars/token), not billing figures.
-- **Not supported yet:** Anthropic Messages, reasoning/thinking output, Bedrock, Vertex. Azure legacy has no model listing: add deployment names manually.
-- **Availability** of third-party models in Chat can depend on your VS Code/Copilot plan and organization policy.
-- **Other editors (Antigravity, Cursor, Windsurf, VS Code forks):** LLM Bridge needs VS Code **1.104+** and its native Chat model picker. Forks usually install extensions from **Open VSX**, so this extension (published on Microsoft's Marketplace) must be installed from the `.vsix` file. In Antigravity IDE 2.5.5 (VS Code 1.107 base) the extension installs, its sidebar and commands work, and models register through `vscode.lm` (checked with the automated host tests). That app has no GitHub Copilot Chat bundled and no `defaultChatAgent` in its product configuration, so VS Code's native Chat panel may not be available to select your models in. This part is unverified in the UI.
-- **Older VS Code (1.104 to 1.120):** cancelling a request made through `vscode.lm.sendRequest` by another extension does not reach the provider, so the HTTP stream stays open until the server ends it or the idle timeout (`timeoutMs`) fires. Checked: this is fixed from VS Code 1.130. (This was observed through the extension API; the Chat panel's Stop button was not tested on old versions.)
+- **Tool calling is never auto-detected.** VS Code's Agent mode only lists models that support it. *Add Endpoint* asks, and you can toggle it per model in the sidebar. Whether a model behaves well in Agent mode depends on the model; VS Code runs the tools and approvals.
+- **Vision is never auto-detected** either. Declare it per model.
+- **Token counts are estimates** (about 4 characters per token), not billing figures.
+- **Tested by the author** end to end in VS Code 1.140 with OpenAI Chat Completions (vLLM and others), OpenAI Responses, Azure OpenAI v1 and legacy, and Ollama. Servers differ, so run **Test Inference** on yours.
+- **Works in VS Code 1.104 and newer.** Other VS Code-based editors (Cursor, Windsurf, Antigravity) may not include the Chat panel this extension relies on, and usually install extensions from Open VSX, so use the `.vsix` file there.
+- **Not supported yet:** Anthropic Messages, reasoning/thinking output, Bedrock, Vertex. Azure legacy has no model listing, so add deployment names manually.
+- Whether third-party models appear in Chat can depend on your VS Code/Copilot plan and organization policy.
 
 ---
 

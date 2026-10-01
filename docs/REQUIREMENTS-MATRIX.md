@@ -22,7 +22,7 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 
 ## Known limits / not verified
 
-- **Real providers**: no test used OpenAI, Azure or Ollama. All protocol behavior is verified against mock servers written from the public wire formats. Run **Test Inference** against yours.
+- **Real providers**: no *automated* test uses a real service; protocol behavior is verified against mock servers written from the public wire formats and a schema check (`scripts/check-wire-schema.sh`). **Manual end-to-end testing by the author** (VS Code 1.140, real chat replies): OpenAI Chat Completions (vLLM and others), OpenAI Responses, Azure OpenAI v1, Azure OpenAI legacy, Ollama. Not separately confirmed: a real tool call executing in Agent mode.
 - **Real GitHub Copilot Chat alongside LLM Bridge**: Copilot Chat 0.68.0 is built into this VS Code (1.140) but does not load in the automated test host, so that test is *skipped*. Manual: sign in to Copilot, add an endpoint, confirm Copilot models, inline completions and your selected model are unchanged and your model appears under its own group in the picker.
 - **Agent mode with custom models**: only the provider side (tool calls out, results in) is verified. Whether a particular model behaves well in Agent mode is model-dependent.
 - **Native UI**: command wizards, the picker's management gear, the notifications and modal import review were not driven by automation.
