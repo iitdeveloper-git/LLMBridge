@@ -1,0 +1,123 @@
+{
+  "name": "llm-bridge",
+  "displayName": "LLM Bridge",
+  "description": "Connect custom LLM endpoints (OpenAI-compatible, Responses, Azure OpenAI, Ollama) to the native VS Code Chat model picker. By IITDEVELOPER.",
+  "version": "0.1.0",
+  "publisher": "iitdeveloper",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iitdeveloper-git/LLMBridge.git"
+  },
+  "private": true,
+  "engines": { "vscode": "^1.104.0" },
+  "categories": ["AI", "Chat", "Other"],
+  "keywords": ["llm", "chat", "openai", "ollama", "azure", "language model"],
+  "main": "./dist/extension.js",
+  "extensionKind": ["workspace"],
+  "activationEvents": [],
+  "capabilities": {
+    "untrustedWorkspaces": { "supported": "limited", "description": "Endpoints are read from user settings only; workspace settings are ignored." },
+    "virtualWorkspaces": true
+  },
+  "contributes": {
+    "languageModelChatProviders": [
+      {
+        "vendor": "iitdeveloper-llm-bridge",
+        "displayName": "LLM Bridge (IITDEVELOPER)",
+        "managementCommand": "iitdeveloperLlmBridge.manage"
+      }
+    ],
+    "commands": [
+      { "command": "iitdeveloperLlmBridge.manage", "title": "Manage Endpoints", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.addEndpoint", "title": "Add Endpoint", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.removeEndpoint", "title": "Remove Endpoint", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.setApiKey", "title": "Set API Key", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.clearApiKey", "title": "Clear API Key", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.testConnection", "title": "Test Connection", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.testInference", "title": "Test Inference", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.discoverModels", "title": "Discover Models", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.addModel", "title": "Add Model Manually", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.exportConfig", "title": "Export Configuration (no secrets)", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.importConfig", "title": "Import Configuration", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.showLog", "title": "Show Diagnostics Log", "category": "LLM Bridge" },
+      { "command": "iitdeveloperLlmBridge.openSettings", "title": "Edit Endpoints in settings.json", "category": "LLM Bridge" }
+    ],
+    "configuration": {
+      "title": "LLM Bridge (IITDEVELOPER)",
+      "properties": {
+        "iitdeveloperLlmBridge.endpoints": {
+          "type": "array",
+          "scope": "application",
+          "default": [],
+          "markdownDescription": "Custom LLM endpoints. Read from **user settings only** (workspace settings are ignored for security). API keys are never stored here; use `LLM Bridge: Set API Key`.",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "protocol", "baseUrl"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,40}$", "description": "Stable endpoint id (used in model ids)." },
+              "name": { "type": "string" },
+              "protocol": { "enum": ["openai-chat", "openai-responses", "azure-openai-v1", "azure-openai-legacy", "ollama"] },
+              "baseUrl": { "type": "string", "description": "Base URL, e.g. https://api.openai.com/v1" },
+              "auth": { "enum": ["bearer", "api-key-header", "none"], "description": "Defaults per protocol." },
+              "apiVersion": { "type": "string", "description": "Azure legacy api-version query parameter." },
+              "azureV1Api": { "enum": ["responses", "chat"], "description": "API style for azure-openai-v1 (default responses)." },
+              "headers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Non-secret extra headers. Credential-bearing headers are rejected." },
+              "allowInsecureHttp": { "type": "boolean", "description": "Allow plain http to non-loopback hosts (not recommended)." },
+              "timeoutMs": { "type": "number", "default": 120000 },
+              "maxRetries": { "type": "number", "default": 2 },
+              "autoDiscover": { "type": "boolean", "default": true },
+              "assumeToolCalling": { "type": "boolean", "default": false, "description": "Assume discovered models support tool calling." },
+              "models": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["id"],
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "maxInputTokens": { "type": "number" },
+                    "maxOutputTokens": { "type": "number" },
+                    "toolCalling": { "type": "boolean" },
+                    "vision": { "type": "boolean" },
+                    "streaming": { "type": "boolean", "default": true }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "iitdeveloperLlmBridge.logLevel": {
+          "type": "string", "scope": "application", "enum": ["off", "error", "info", "debug"], "default": "info",
+          "description": "Diagnostics verbosity. Prompts, code and full responses are never logged."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "build": "node esbuild.mjs --production",
+    "build:dev": "node esbuild.mjs",
+    "compile-tests": "tsc -p tsconfig.test.json",
+    "test:integration": "npm run build:dev && npm run compile-tests && node out/test/integration/runTests.js",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-0.1.0.vsix",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "1.104.0",
+    "@vscode/test-electron": "^2.5.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "mocha": "^10.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}
