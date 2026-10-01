@@ -10,7 +10,6 @@
     "type": "git",
     "url": "https://github.com/iitdeveloper-git/LLMBridge.git"
   },
-  "private": true,
   "engines": { "vscode": "^1.104.0" },
   "categories": ["AI", "Chat", "Other"],
   "keywords": ["llm", "chat", "openai", "ollama", "azure", "language model"],
