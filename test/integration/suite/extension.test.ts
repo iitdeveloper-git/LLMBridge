@@ -4,7 +4,7 @@ import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
 import * as vscode from 'vscode';
 
-const EXT_ID = 'iitdeveloper.llm-bridge';
+const EXT_ID = 'iitdeveloper.llm-bridge-ai';
 const VENDOR = 'iitdeveloper-llm-bridge';
 const cfg = () => vscode.workspace.getConfiguration('iitdeveloperLlmBridge');
 
@@ -168,15 +168,21 @@ describe('LLM Bridge in a real Extension Development Host', function () {
     await assert.rejects(async () => { const r = await m!.sendRequest([vscode.LanguageModelChatMessage.User('x')]); for await (const _ of r.stream) { /* */ } }, /Authentication failed.*bad key/s);
   });
 
-  it('cancels an in-flight stream', async () => {
+  it('cancels an in-flight stream', async function () {
+    // Observed: 1.104, 1.107 and 1.120 do not propagate a caller's cancellation to the provider's token (the provider
+    // never sees it, so the stream stays open); 1.130 and 1.140 do. Strict from 1.130; older hosts skip instead of failing.
+    const [maj, min] = vscode.version.split('.').map(Number);
+    const propagates = (maj ?? 0) > 1 || ((maj ?? 0) === 1 && (min ?? 0) >= 130);
+    if (!propagates) this.timeout(12000);
     await cfg().update('endpoints', [{ id: 'slow', name: 'Slow', protocol: 'openai-chat', baseUrl: `${origin}/slow/v1`, auth: 'none', maxRetries: 0, timeoutMs: 60000, models: [{ id: 'x' }] }], vscode.ConfigurationTarget.Global);
     const [m] = await waitFor(async () => { const r = await vscode.lm.selectChatModels({ vendor: VENDOR, id: 'slow::x' }); return r.length ? r : undefined; });
     const cts = new vscode.CancellationTokenSource();
     const res = await m!.sendRequest([vscode.LanguageModelChatMessage.User('x')], {}, cts.token);
     const started = Date.now();
-    const drained = (async () => { try { for await (const _ of res.text) cts.cancel(); } catch { /* cancellation expected */ } })();
-    await drained;
-    assert.ok(Date.now() - started < 10000, 'stream ended promptly after cancel');
+    const drained = (async () => { try { for await (const _ of res.text) cts.cancel(); } catch { /* cancellation expected */ } return true; })();
+    const finished = await Promise.race([drained, new Promise<boolean>((r) => setTimeout(() => r(false), propagates ? 10000 : 6000))]);
+    if (!finished && !propagates) return this.skip(); // host limitation on older VS Code, see comment above
+    assert.ok(finished && Date.now() - started < 10000, 'stream ended promptly after cancel');
   });
 
   it('coexists with the real GitHub Copilot Chat extension when it is present', async function () {

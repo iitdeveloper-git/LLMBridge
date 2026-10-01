@@ -18,7 +18,7 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 | 12 | No Copilot dependency; graceful absence | H (manifest has no `extensionDependencies`, no "copilot" string); runs where Copilot is absent | `extension.test.ts` |
 | 13 | Listed test areas | U: URL, auth, redaction, discovery, manual fallback, stable IDs, streaming, **split UTF-8/SSE (every byte boundary + byte-by-byte + 3-byte network chunks)**, tool round trips, cancellation, timeouts (connect + idle), retries, credential binding, cross-origin redirects | `test/unit/*` |
 | 14 | typecheck, lint, unit, integration, build, EDH tests, install/uninstall | `npm run verify`, `npm run test:integration`, lifecycle script | see report |
-| 15 | Local VSIX, no Marketplace publish | `llm-bridge-1.0.0.vsix` | repo root |
+| 15 | Local VSIX, no Marketplace publish | `llm-bridge-ai-1.0.0.vsix` | repo root |
 
 ## Known limits / not verified
 
@@ -30,3 +30,5 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 - Default VS Code behavior: if no other chat model is available, VS Code itself may pick a third-party model as the Chat default (observed in the sandbox log). LLM Bridge never writes a model-selection setting.
 
 - **Strict-server compatibility**: `scripts/check-wire-schema.sh` validates generated Chat Completions and Responses bodies against OpenAI's typed schemas (the kind servers such as vLLM validate with). It is a schema check, not a test against a real vLLM server.
+
+- **Hosts tested** (same Extension Development Host suite): VS Code 1.140.0, 1.130.0 (15 pass, 1 skipped: Copilot coexistence); 1.120.0, 1.107.0, 1.104.0 and Antigravity IDE 2.5.5 (14 pass, 2 skipped: Copilot coexistence, and cancellation propagation, which VS Code before 1.130 does not provide to providers). `VSCODE_VERSION=1.107.0 npm run test:integration` or `VSCODE_EXEC=<path to the app's Electron binary>` selects the host.

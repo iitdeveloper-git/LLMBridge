@@ -1,6 +1,6 @@
 {
-  "name": "llm-bridge",
-  "displayName": "LLM Bridge",
+  "name": "llm-bridge-ai",
+  "displayName": "LLM Bridge by IITDEVELOPER",
   "description": "Connect custom LLM endpoints (OpenAI-compatible, Responses, Azure OpenAI, Ollama) to the native VS Code Chat model picker. By IITDEVELOPER.",
   "version": "1.0.0",
   "publisher": "iitdeveloper",
@@ -407,7 +407,7 @@
     "build:dev": "node esbuild.mjs",
     "compile-tests": "tsc -p tsconfig.test.json",
     "test:integration": "npm run build:dev && npm run compile-tests && node out/test/integration/runTests.js",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-1.0.0.vsix",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-ai-1.0.0.vsix",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "devDependencies": {

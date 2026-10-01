@@ -283,6 +283,8 @@ No `Chat request` line means the reply came from a different model. If your mode
 - **Token counts are estimates** (~4 chars/token), not billing figures.
 - **Not supported yet:** Anthropic Messages, reasoning/thinking output, Bedrock, Vertex. Azure legacy has no model listing: add deployment names manually.
 - **Availability** of third-party models in Chat can depend on your VS Code/Copilot plan and organization policy.
+- **Other editors (Antigravity, Cursor, Windsurf, VS Code forks):** LLM Bridge needs VS Code **1.104+** and its native Chat model picker. Forks usually install extensions from **Open VSX**, so this extension (published on Microsoft's Marketplace) must be installed from the `.vsix` file. In Antigravity IDE 2.5.5 (VS Code 1.107 base) the extension installs, its sidebar and commands work, and models register through `vscode.lm` (checked with the automated host tests). That app has no GitHub Copilot Chat bundled and no `defaultChatAgent` in its product configuration, so VS Code's native Chat panel may not be available to select your models in. This part is unverified in the UI.
+- **Older VS Code (1.104 to 1.120):** cancelling a request made through `vscode.lm.sendRequest` by another extension does not reach the provider, so the HTTP stream stays open until the server ends it or the idle timeout (`timeoutMs`) fires. Checked: this is fixed from VS Code 1.130. (This was observed through the extension API; the Chat panel's Stop button was not tested on old versions.)
 
 ---
 
@@ -308,7 +310,7 @@ npm run test:integration
 
 # 4. Package local VSIX installer
 npm run package
-code --install-extension llm-bridge-1.0.0.vsix
+code --install-extension llm-bridge-ai-1.0.0.vsix
 ```
 
 See [REQUIREMENTS-MATRIX.md](docs/REQUIREMENTS-MATRIX.md) for full requirement-to-test traceability.

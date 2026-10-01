@@ -30,7 +30,7 @@ async function main() {
   }));
 
   const local = '/Applications/Visual Studio Code.app/Contents/MacOS/Code';
-  const vscodeExecutablePath = process.env.VSCODE_EXEC ?? (process.platform === 'darwin' && fs.existsSync(local) ? local : undefined);
+  const vscodeExecutablePath = process.env.VSCODE_EXEC ?? (!process.env.VSCODE_VERSION && process.platform === 'darwin' && fs.existsSync(local) ? local : undefined);
   if (process.env.LLMB_INSTALL_COPILOT === '1') {
     // Install the real GitHub Copilot Chat into the sandbox so coexistence is tested against it, not a stub.
     const cli = process.env.CODE_CLI ?? '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code';

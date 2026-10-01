@@ -11,12 +11,12 @@ JSON
 cp "$SB/user-data/User/settings.json" "$SB/before.json"
 args=(--user-data-dir "$SB/user-data" --extensions-dir "$SB/ext")
 if [ "${WITH_COPILOT:-0}" = 1 ]; then "$CODE" "${args[@]}" --install-extension GitHub.copilot-chat || true; fi
-"$CODE" "${args[@]}" --install-extension "$ROOT/llm-bridge-1.0.0.vsix"
+"$CODE" "${args[@]}" --install-extension "$ROOT/llm-bridge-ai-1.0.0.vsix"
 "$CODE" "${args[@]}" --list-extensions --show-versions | tee "$SB/installed.txt"
-grep -q '^iitdeveloper.llm-bridge@1.0.0$' "$SB/installed.txt"
+grep -q '^iitdeveloper.llm-bridge-ai@1.0.0$' "$SB/installed.txt"
 cmp "$SB/before.json" "$SB/user-data/User/settings.json" && echo "OK: settings unchanged after install"
-"$CODE" "${args[@]}" --uninstall-extension iitdeveloper.llm-bridge
-"$CODE" "${args[@]}" --list-extensions | grep -q 'iitdeveloper.llm-bridge' && { echo "FAIL: still installed"; exit 1; } || echo "OK: uninstalled"
+"$CODE" "${args[@]}" --uninstall-extension iitdeveloper.llm-bridge-ai
+"$CODE" "${args[@]}" --list-extensions | grep -q 'iitdeveloper.llm-bridge-ai' && { echo "FAIL: still installed"; exit 1; } || echo "OK: uninstalled"
 cmp "$SB/before.json" "$SB/user-data/User/settings.json" && echo "OK: settings unchanged after uninstall"
 # Copilot Chat is built into recent VS Code, so it is not listed as a user extension; nothing of it is touched either way.
 echo "DONE"
