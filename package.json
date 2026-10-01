@@ -2,7 +2,7 @@
   "name": "llm-bridge",
   "displayName": "LLM Bridge",
   "description": "Connect custom LLM endpoints (OpenAI-compatible, Responses, Azure OpenAI, Ollama) to the native VS Code Chat model picker. By IITDEVELOPER.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "iitdeveloper",
   "license": "MIT",
   "icon": "media/icon-256.png",
@@ -10,14 +10,32 @@
     "type": "git",
     "url": "https://github.com/iitdeveloper-git/LLMBridge.git"
   },
-  "engines": { "vscode": "^1.104.0" },
-  "categories": ["AI", "Chat", "Other"],
-  "keywords": ["llm", "chat", "openai", "ollama", "azure", "language model"],
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "llm",
+    "chat",
+    "openai",
+    "ollama",
+    "azure",
+    "language model"
+  ],
   "main": "./dist/extension.js",
-  "extensionKind": ["workspace"],
+  "extensionKind": [
+    "workspace"
+  ],
   "activationEvents": [],
   "capabilities": {
-    "untrustedWorkspaces": { "supported": "limited", "description": "Endpoints are read from user settings only; workspace settings are ignored." },
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Endpoints are read from user settings only; workspace settings are ignored."
+    },
     "virtualWorkspaces": true
   },
   "contributes": {
@@ -29,19 +47,90 @@
       }
     ],
     "commands": [
-      { "command": "iitdeveloperLlmBridge.manage", "title": "Manage Endpoints", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.addEndpoint", "title": "Add Endpoint", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.removeEndpoint", "title": "Remove Endpoint", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.setApiKey", "title": "Set API Key", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.clearApiKey", "title": "Clear API Key", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.testConnection", "title": "Test Connection", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.testInference", "title": "Test Inference", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.discoverModels", "title": "Discover Models", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.addModel", "title": "Add Model Manually", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.exportConfig", "title": "Export Configuration (no secrets)", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.importConfig", "title": "Import Configuration", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.showLog", "title": "Show Diagnostics Log", "category": "LLM Bridge" },
-      { "command": "iitdeveloperLlmBridge.openSettings", "title": "Edit Endpoints in settings.json", "category": "LLM Bridge" }
+      {
+        "command": "iitdeveloperLlmBridge.manage",
+        "title": "Manage Endpoints",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.addEndpoint",
+        "title": "Add Endpoint",
+        "category": "LLM Bridge",
+        "icon": "$(add)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.removeEndpoint",
+        "title": "Remove Endpoint",
+        "category": "LLM Bridge",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.setApiKey",
+        "title": "Set API Key",
+        "category": "LLM Bridge",
+        "icon": "$(key)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.clearApiKey",
+        "title": "Clear API Key",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.testConnection",
+        "title": "Test Connection",
+        "category": "LLM Bridge",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.testInference",
+        "title": "Test Inference",
+        "category": "LLM Bridge",
+        "icon": "$(play)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.discoverModels",
+        "title": "Discover Models",
+        "category": "LLM Bridge",
+        "icon": "$(search)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.addModel",
+        "title": "Add Model Manually",
+        "category": "LLM Bridge",
+        "icon": "$(symbol-method)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.exportConfig",
+        "title": "Export Configuration (no secrets)",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.importConfig",
+        "title": "Import Configuration",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.showLog",
+        "title": "Show Diagnostics Log",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.openSettings",
+        "title": "Edit Endpoints in settings.json",
+        "category": "LLM Bridge"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.refresh",
+        "title": "Refresh",
+        "category": "LLM Bridge",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.removeModel",
+        "title": "Remove Model",
+        "category": "LLM Bridge",
+        "icon": "$(trash)"
+      }
     ],
     "configuration": {
       "title": "LLM Bridge (IITDEVELOPER)",
@@ -53,34 +142,111 @@
           "markdownDescription": "Custom LLM endpoints. Read from **user settings only** (workspace settings are ignored for security). API keys are never stored here; use `LLM Bridge: Set API Key`.",
           "items": {
             "type": "object",
-            "required": ["id", "name", "protocol", "baseUrl"],
+            "required": [
+              "id",
+              "name",
+              "protocol",
+              "baseUrl"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,40}$", "description": "Stable endpoint id (used in model ids)." },
-              "name": { "type": "string" },
-              "protocol": { "enum": ["openai-chat", "openai-responses", "azure-openai-v1", "azure-openai-legacy", "ollama"] },
-              "baseUrl": { "type": "string", "description": "Base URL, e.g. https://api.openai.com/v1" },
-              "auth": { "enum": ["bearer", "api-key-header", "none"], "description": "Defaults per protocol." },
-              "apiVersion": { "type": "string", "description": "Azure legacy api-version query parameter." },
-              "azureV1Api": { "enum": ["responses", "chat"], "description": "API style for azure-openai-v1 (default responses)." },
-              "headers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "Non-secret extra headers. Credential-bearing headers are rejected." },
-              "allowInsecureHttp": { "type": "boolean", "description": "Allow plain http to non-loopback hosts (not recommended)." },
-              "timeoutMs": { "type": "number", "default": 120000 },
-              "maxRetries": { "type": "number", "default": 2 },
-              "autoDiscover": { "type": "boolean", "default": true },
-              "assumeToolCalling": { "type": "boolean", "default": false, "description": "Assume discovered models support tool calling." },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{1,40}$",
+                "description": "Stable endpoint id (used in model ids)."
+              },
+              "name": {
+                "type": "string"
+              },
+              "protocol": {
+                "enum": [
+                  "openai-chat",
+                  "openai-responses",
+                  "azure-openai-v1",
+                  "azure-openai-legacy",
+                  "ollama"
+                ]
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "Base URL, e.g. https://api.openai.com/v1"
+              },
+              "auth": {
+                "enum": [
+                  "bearer",
+                  "api-key-header",
+                  "none"
+                ],
+                "description": "Defaults per protocol."
+              },
+              "apiVersion": {
+                "type": "string",
+                "description": "Azure legacy api-version query parameter."
+              },
+              "azureV1Api": {
+                "enum": [
+                  "responses",
+                  "chat"
+                ],
+                "description": "API style for azure-openai-v1 (default responses)."
+              },
+              "headers": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Non-secret extra headers. Credential-bearing headers are rejected."
+              },
+              "allowInsecureHttp": {
+                "type": "boolean",
+                "description": "Allow plain http to non-loopback hosts (not recommended)."
+              },
+              "timeoutMs": {
+                "type": "number",
+                "default": 120000
+              },
+              "maxRetries": {
+                "type": "number",
+                "default": 2
+              },
+              "autoDiscover": {
+                "type": "boolean",
+                "default": true
+              },
+              "assumeToolCalling": {
+                "type": "boolean",
+                "default": false,
+                "description": "Assume discovered models support tool calling."
+              },
               "models": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["id"],
+                  "required": [
+                    "id"
+                  ],
                   "properties": {
-                    "id": { "type": "string" },
-                    "name": { "type": "string" },
-                    "maxInputTokens": { "type": "number" },
-                    "maxOutputTokens": { "type": "number" },
-                    "toolCalling": { "type": "boolean" },
-                    "vision": { "type": "boolean" },
-                    "streaming": { "type": "boolean", "default": true }
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "maxInputTokens": {
+                      "type": "number"
+                    },
+                    "maxOutputTokens": {
+                      "type": "number"
+                    },
+                    "toolCalling": {
+                      "type": "boolean"
+                    },
+                    "vision": {
+                      "type": "boolean"
+                    },
+                    "streaming": {
+                      "type": "boolean",
+                      "default": true
+                    }
                   }
                 }
               }
@@ -88,10 +254,129 @@
           }
         },
         "iitdeveloperLlmBridge.logLevel": {
-          "type": "string", "scope": "application", "enum": ["off", "error", "info", "debug"], "default": "info",
+          "type": "string",
+          "scope": "application",
+          "enum": [
+            "off",
+            "error",
+            "info",
+            "debug"
+          ],
+          "default": "info",
           "description": "Diagnostics verbosity. Prompts, code and full responses are never logged."
         }
       }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "iitdeveloperLlmBridge",
+          "title": "LLM Bridge",
+          "icon": "media/activitybar.svg"
+        }
+      ]
+    },
+    "views": {
+      "iitdeveloperLlmBridge": [
+        {
+          "id": "iitdeveloperLlmBridge.endpoints",
+          "name": "Endpoints",
+          "contextualTitle": "LLM Bridge"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "iitdeveloperLlmBridge.endpoints",
+        "contents": "Connect your own LLM endpoint to the VS Code Chat model picker.\n[Add Endpoint](command:iitdeveloperLlmBridge.addEndpoint)\n[Import Configuration](command:iitdeveloperLlmBridge.importConfig)\nAPI keys are stored in VS Code SecretStorage and only sent to the endpoint you enter."
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "iitdeveloperLlmBridge.addEndpoint",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "navigation@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.refresh",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "navigation@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.importConfig",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "1_config@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.exportConfig",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "1_config@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.openSettings",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "1_config@3"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.showLog",
+          "when": "view == iitdeveloperLlmBridge.endpoints",
+          "group": "2_help@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "iitdeveloperLlmBridge.testConnection",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "inline@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.setApiKey",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "inline@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.testInference",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "1_test@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.discoverModels",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "2_models@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.addModel",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "2_models@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.clearApiKey",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "3_key@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.removeEndpoint",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == endpoint",
+          "group": "9_danger@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.testInference",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem =~ /^model-/",
+          "group": "inline@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.removeModel",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == model-manual",
+          "group": "9_danger@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "iitdeveloperLlmBridge.removeModel",
+          "when": "false"
+        }
+      ]
     }
   },
   "scripts": {
@@ -102,7 +387,7 @@
     "build:dev": "node esbuild.mjs",
     "compile-tests": "tsc -p tsconfig.test.json",
     "test:integration": "npm run build:dev && npm run compile-tests && node out/test/integration/runTests.js",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-0.1.0.vsix",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-0.2.0.vsix",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "devDependencies": {

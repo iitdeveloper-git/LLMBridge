@@ -30,8 +30,17 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
       }
     }));
 
-  const pickEndpoint = async (placeHolder: string): Promise<EndpointConfig | undefined> => {
+  /** Tree items pass `{ endpointId }` as the first argument; the Command Palette passes nothing. */
+  const fromArg = (arg: unknown): { endpointId?: string; modelId?: string } =>
+    arg && typeof arg === 'object' ? (arg as { endpointId?: string; modelId?: string }) : {};
+
+  const pickEndpoint = async (placeHolder: string, arg?: unknown): Promise<EndpointConfig | undefined> => {
     const { endpoints } = store.read();
+    const wanted = fromArg(arg).endpointId;
+    if (typeof wanted === 'string') {
+      const hit = endpoints.find((e) => e.id === wanted);
+      if (hit) return hit;
+    }
     if (!endpoints.length) {
       const pick = await vscode.window.showInformationMessage('No LLM Bridge endpoints configured yet.', 'Add Endpoint');
       if (pick) await vscode.commands.executeCommand(CMD('addEndpoint'));
@@ -97,8 +106,8 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
     else void vscode.window.showInformationMessage('Endpoint saved. This protocol has no model listing: run "LLM Bridge: Add Model Manually".');
   });
 
-  reg('removeEndpoint', async () => {
-    const ep = await pickEndpoint('Remove which endpoint?');
+  reg('removeEndpoint', async (arg?: unknown) => {
+    const ep = await pickEndpoint('Remove which endpoint?', arg);
     if (!ep) return;
     const ok = await vscode.window.showWarningMessage(`Remove "${ep.name}" and its stored API key?`, { modal: true }, 'Remove');
     if (!ok) return;
@@ -108,30 +117,31 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
     provider.refresh();
   });
 
-  reg('setApiKey', async () => { const ep = await pickEndpoint('Set API key for which endpoint?'); if (ep && (await promptKey(ep, 'Set API Key'))) provider.refresh(); });
-  reg('clearApiKey', async () => { const ep = await pickEndpoint('Clear API key for which endpoint?'); if (ep) { await creds.delete(ep.id); void vscode.window.showInformationMessage(`API key cleared for ${ep.name}.`); } });
-  reg('discoverModels', async () => { const ep = await pickEndpoint('Discover models on which endpoint?'); if (ep) await doDiscover(ep); });
+  reg('setApiKey', async (arg?: unknown) => { const ep = await pickEndpoint('Set API key for which endpoint?', arg); if (ep && (await promptKey(ep, 'Set API Key'))) provider.refresh(); });
+  reg('clearApiKey', async (arg?: unknown) => { const ep = await pickEndpoint('Clear API key for which endpoint?', arg); if (ep) { await creds.delete(ep.id); void vscode.window.showInformationMessage(`API key cleared for ${ep.name}.`); } });
+  reg('discoverModels', async (arg?: unknown) => { const ep = await pickEndpoint('Discover models on which endpoint?', arg); if (ep) await doDiscover(ep); });
 
-  reg('testConnection', async () => {
-    const ep = await pickEndpoint('Test which endpoint?');
+  reg('testConnection', async (arg?: unknown) => {
+    const ep = await pickEndpoint('Test which endpoint?', arg);
     if (!ep) return;
     const r = await testConnection(ep, await creds.get(ep.id), undefined, { log });
     void (r.ok ? vscode.window.showInformationMessage(`${ep.name}: ${r.message} (${r.latencyMs} ms)`) : vscode.window.showErrorMessage(`${ep.name}: ${r.message}`));
   });
 
-  reg('testInference', async () => {
-    const ep = await pickEndpoint('Test inference on which endpoint?');
+  reg('testInference', async (arg?: unknown) => {
+    const ep = await pickEndpoint('Test inference on which endpoint?', arg);
     if (!ep) return;
     const models = resolveModels(ep, store.discovered(ep.id));
     if (!models.length) throw new BridgeError('config', 'No models yet. Discover or add one first.');
-    const m = await vscode.window.showQuickPick(models.map((x) => ({ label: x.name, description: x.id, m: x })), { placeHolder: 'Model' });
+    const preset = models.find((x) => x.id === fromArg(arg).modelId);
+    const m = preset ? { m: preset } : await vscode.window.showQuickPick(models.map((x) => ({ label: x.name, description: x.id, m: x })), { placeHolder: 'Model' });
     if (!m) return;
     const r = await testInference(ep, m.m.id, m.m.streaming, await creds.get(ep.id), undefined, { log });
     void (r.ok ? vscode.window.showInformationMessage(`${ep.name}/${m.m.id}: ${r.message} (${r.latencyMs} ms)`) : vscode.window.showErrorMessage(`${ep.name}/${m.m.id}: ${r.message}`));
   });
 
-  reg('addModel', async () => {
-    const ep = await pickEndpoint('Add a model to which endpoint?');
+  reg('addModel', async (arg?: unknown) => {
+    const ep = await pickEndpoint('Add a model to which endpoint?', arg);
     if (!ep) return;
     const id = await vscode.window.showInputBox({ title: ep.protocol === 'azure-openai-legacy' ? 'Deployment name' : 'Model id', ignoreFocusOut: true, validateInput: (v) => (v.trim() ? undefined : 'Required') });
     if (!id) return;
@@ -151,6 +161,16 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
     const model: ModelConfig = { id: id.trim(), maxInputTokens, maxOutputTokens, toolCalling: flags.some((f) => f.k === 'toolCalling'), vision: flags.some((f) => f.k === 'vision') };
     const eps = store.read().endpoints.map((e) => (e.id === ep.id ? { ...e, models: [...(e.models ?? []).filter((m) => m.id !== model.id), model] } : e));
     await store.write(eps);
+    provider.refresh();
+  });
+
+  reg('removeModel', async (arg?: unknown) => {
+    const { endpointId, modelId } = fromArg(arg);
+    const ep = store.read().endpoints.find((e) => e.id === endpointId);
+    const model = ep?.models?.find((m) => m.id === modelId);
+    if (!ep || !model) throw new BridgeError('config', 'Only manually added models can be removed here. Discovered models come from the server.');
+    if (!(await vscode.window.showWarningMessage(`Remove model "${model.name ?? model.id}" from ${ep.name}?`, { modal: true }, 'Remove'))) return;
+    await store.write(store.read().endpoints.map((e) => (e.id === ep.id ? { ...e, models: (e.models ?? []).filter((m) => m.id !== model.id) } : e)));
     provider.refresh();
   });
 

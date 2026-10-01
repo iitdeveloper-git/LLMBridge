@@ -1,4 +1,4 @@
-# Requirements → verification matrix (v0.1.0)
+# Requirements → verification matrix (v0.2.0)
 
 Legend — **U**: unit test against a real local HTTP server (no real provider) · **H**: Extension Development Host test on VS Code 1.140.0
 (real `vscode.lm` API, mock HTTP server) · **S**: scripted lifecycle (`scripts/verify-vsix-lifecycle.sh`) · **M**: manual steps required · **—**: not verified.
@@ -18,7 +18,7 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 | 12 | No Copilot dependency; graceful absence | H (manifest has no `extensionDependencies`, no "copilot" string); runs where Copilot is absent | `extension.test.ts` |
 | 13 | Listed test areas | U: URL, auth, redaction, discovery, manual fallback, stable IDs, streaming, **split UTF-8/SSE (every byte boundary + byte-by-byte + 3-byte network chunks)**, tool round trips, cancellation, timeouts (connect + idle), retries, credential binding, cross-origin redirects | `test/unit/*` |
 | 14 | typecheck, lint, unit, integration, build, EDH tests, install/uninstall | `npm run verify`, `npm run test:integration`, lifecycle script | see report |
-| 15 | Local VSIX, no Marketplace publish | `llm-bridge-0.1.0.vsix` (not published) | repo root |
+| 15 | Local VSIX, no Marketplace publish | `llm-bridge-0.2.0.vsix` | repo root |
 
 ## Known limits / not verified
 

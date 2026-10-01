@@ -58,6 +58,17 @@ describe('LLM Bridge in a real Extension Development Host', function () {
     assert.strictEqual(pkg.extensionDependencies, undefined);
   });
 
+  it('contributes the sidebar: activity bar container, endpoints view, welcome, menus', () => {
+    const c = vscode.extensions.getExtension(EXT_ID)!.packageJSON.contributes;
+    assert.strictEqual(c.viewsContainers.activitybar[0].id, 'iitdeveloperLlmBridge');
+    assert.strictEqual(c.views.iitdeveloperLlmBridge[0].id, 'iitdeveloperLlmBridge.endpoints');
+    assert.ok(c.viewsWelcome[0].contents.includes('command:iitdeveloperLlmBridge.addEndpoint'));
+    const menuCmds = [...c.menus['view/title'], ...c.menus['view/item/context']].map((m: any) => m.command);
+    const declared = c.commands.map((x: any) => x.command);
+    for (const m of menuCmds) assert.ok(declared.includes(m), `menu command ${m} is declared`);
+    assert.ok(fs.existsSync(vscode.Uri.joinPath(vscode.extensions.getExtension(EXT_ID)!.extensionUri, 'media', 'activitybar.svg').fsPath), 'activity bar icon file exists');
+  });
+
   it('registers all commands', async () => {
     const all = await vscode.commands.getCommands(true);
     const pkg = vscode.extensions.getExtension(EXT_ID)!.packageJSON;
@@ -80,6 +91,18 @@ describe('LLM Bridge in a real Extension Development Host', function () {
     assert.strictEqual(tools.name, 'Tools Model');
     assert.strictEqual(tools.maxInputTokens, 32000);
     assert.strictEqual(tools.vendor, VENDOR);
+  });
+
+  it('opens the sidebar view and its commands accept tree-item arguments', async () => {
+    await vscode.commands.executeCommand('workbench.view.extension.iitdeveloperLlmBridge');
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.refresh');
+    const before = seen.length;
+    // Same shape a tree node passes: no QuickPick should be needed (a pick would hang this test).
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.testConnection', { kind: 'endpoint', endpointId: 'mock' });
+    await waitFor(async () => (seen.length > before ? true : undefined));
+    assert.strictEqual(seen.at(-1)!.url, '/v1/models');
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.testInference', { kind: 'model', endpointId: 'mock', modelId: 'm-plain' });
+    await waitFor(async () => (seen.at(-1)!.url === '/v1/chat/completions' && seen.at(-1)!.body.model === 'm-plain' ? true : undefined));
   });
 
   it('streams a chat response end-to-end through the native API', async () => {

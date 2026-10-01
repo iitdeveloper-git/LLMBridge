@@ -11,7 +11,7 @@
 Developed with ❤️ by **[IITDEVELOPER](https://github.com/iitdeveloper-git)**
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.104.0-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.1.0-6366f1?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/package.json)
+[![Version](https://img.shields.io/badge/version-0.2.0-6366f1?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Keys](https://img.shields.io/badge/Keys-SecretStorage-success?style=for-the-badge&logo=shield)](#️-security--privacy-first)
@@ -105,6 +105,19 @@ flowchart LR
     style VSCode fill:#181825,stroke:#007acc,stroke-width:2px,color:#fff
     style Providers fill:#11111b,stroke:#10b981,stroke-width:2px,color:#fff
 ```
+
+---
+
+## 🧭 The Sidebar
+
+Click the **LLM Bridge** (lotus) icon in the Activity Bar. You get:
+
+- A tree of your **endpoints** and their **models**, with an API-key status icon (✔ set · 🔑 missing · ⛔ saved for a different origin).
+- **Inline buttons** on each endpoint: *Test Connection* and *Set API Key*. Right-click for Test Inference, Discover Models, Add Model, Clear Key, Remove.
+- A title bar with **Add Endpoint**, **Refresh**, and a `…` menu for Import / Export / Edit settings / Diagnostics Log.
+- A welcome screen with **Add Endpoint** and **Import Configuration** when you have none yet.
+
+Every action is also available from the Command Palette (`LLM Bridge: …`).
 
 ---
 
@@ -251,7 +264,7 @@ npm run test:integration
 
 # 4. Package local VSIX installer
 npm run package
-code --install-extension llm-bridge-0.1.0.vsix
+code --install-extension llm-bridge-0.2.0.vsix
 ```
 
 See [REQUIREMENTS-MATRIX.md](docs/REQUIREMENTS-MATRIX.md) for full requirement-to-test traceability.
@@ -273,6 +286,8 @@ Contributions, issues, and feature requests are welcome!
 ## 📄 License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
+
+The IIT DEVELOPER name and logo are trademarks of IIT DEVELOPER and are **not** covered by the MIT license.
 
 <div align="center">
 
