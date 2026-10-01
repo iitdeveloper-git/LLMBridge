@@ -13,6 +13,11 @@ describe('LLM Bridge in a real Extension Development Host', function () {
   let origin: string;
   const seen: Array<{ url: string; body: any; auth?: string }> = [];
 
+  const mockEndpoints = () => [
+    { id: 'mock', name: 'Mock', protocol: 'openai-chat', baseUrl: `${origin}/v1`, auth: 'none', maxRetries: 0, timeoutMs: 5000,
+      models: [{ id: 'm-tools', name: 'Tools Model', maxInputTokens: 32000, maxOutputTokens: 4000, toolCalling: true }, { id: 'm-plain' }] },
+  ];
+
   before(async () => {
     server = http.createServer((req, res) => {
       let raw = '';
@@ -81,10 +86,7 @@ describe('LLM Bridge in a real Extension Development Host', function () {
   });
 
   it('exposes manual models via the native vscode.lm API with stable ids and capabilities', async () => {
-    await cfg().update('endpoints', [
-      { id: 'mock', name: 'Mock', protocol: 'openai-chat', baseUrl: `${origin}/v1`, auth: 'none', maxRetries: 0, timeoutMs: 5000,
-        models: [{ id: 'm-tools', name: 'Tools Model', maxInputTokens: 32000, maxOutputTokens: 4000, toolCalling: true }, { id: 'm-plain' }] },
-    ], vscode.ConfigurationTarget.Global);
+    await cfg().update('endpoints', mockEndpoints(), vscode.ConfigurationTarget.Global);
     const models = await waitFor(async () => { const m = await vscode.lm.selectChatModels({ vendor: VENDOR }); return m.length === 2 ? m : undefined; });
     const tools = models.find((m) => m.id === 'mock::m-tools')!;
     assert.ok(tools, `ids: ${models.map((m) => m.id)}`);
@@ -103,6 +105,20 @@ describe('LLM Bridge in a real Extension Development Host', function () {
     assert.strictEqual(seen.at(-1)!.url, '/v1/models');
     await vscode.commands.executeCommand('iitdeveloperLlmBridge.testInference', { kind: 'model', endpointId: 'mock', modelId: 'm-plain' });
     await waitFor(async () => (seen.at(-1)!.url === '/v1/chat/completions' && seen.at(-1)!.body.model === 'm-plain' ? true : undefined));
+  });
+
+  it('Toggle Tool Calling (sidebar action) changes what VS Code sees for a discovered model', async () => {
+    await cfg().update('endpoints', [{ id: 'tg', name: 'Tg', protocol: 'openai-chat', baseUrl: `${origin}/v1`, auth: 'none', models: [] }], vscode.ConfigurationTarget.Global);
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.discoverModels', { kind: 'endpoint', endpointId: 'tg' });
+    const tools = async () => { const [m] = await vscode.lm.selectChatModels({ vendor: VENDOR, id: 'tg::discovered-1' }); return m ? (m as any).capabilities?.supportsToolCalling : undefined; };
+    await waitFor(async () => ((await tools()) === false ? true : undefined));
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.toggleToolCalling', { kind: 'model', endpointId: 'tg', modelId: 'discovered-1' });
+    await waitFor(async () => ((await tools()) ? true : undefined));
+    await vscode.commands.executeCommand('iitdeveloperLlmBridge.toggleToolCalling', { kind: 'model', endpointId: 'tg', modelId: 'discovered-1' });
+    await waitFor(async () => ((await tools()) === false ? true : undefined));
+    // restore the shared fixture for the tests that follow
+    await cfg().update('endpoints', mockEndpoints(), vscode.ConfigurationTarget.Global);
+    await waitFor(async () => ((await vscode.lm.selectChatModels({ vendor: VENDOR, id: 'mock::m-plain' })).length ? true : undefined));
   });
 
   it('streams a chat response end-to-end through the native API', async () => {

@@ -24,7 +24,12 @@ export async function* streamChat(a: StreamChatArgs): AsyncGenerator<StreamEvent
   const stream = a.model.streaming !== false;
   const req: ChatRequest = { ...a.request, model: a.model.id, stream };
   const url = adapter.chatUrl(ep, a.model.id);
-  a.deps?.log?.debug(`POST ${url.origin}${url.pathname} model=${stableModelId(ep.id, a.model.id)} stream=${stream} messages=${req.messages.length} tools=${req.tools?.length ?? 0}`);
+  const log = a.deps?.log;
+  const started = Date.now();
+  let textChunks = 0;
+  let toolCalls = 0;
+  // Metadata only: never the prompt, code, or response text.
+  log?.info(`Chat request: ${stableModelId(ep.id, a.model.id)} POST ${url.origin}${url.pathname} stream=${stream} messages=${req.messages.length} tools=${req.tools?.length ?? 0}`);
 
   const { response, deadline } = await send(
     {
@@ -36,6 +41,7 @@ export async function* streamChat(a: StreamChatArgs): AsyncGenerator<StreamEvent
     },
     a.deps,
   );
+  const count = (e: StreamEvent) => { if (e.type === 'text') textChunks++; else toolCalls++; };
   try {
     const type = response.headers.get('content-type') ?? '';
     if (stream && type.includes('text/event-stream') && response.body) {
@@ -47,10 +53,10 @@ export async function* streamChat(a: StreamChatArgs): AsyncGenerator<StreamEvent
           deadline.arm();
           const { done, value } = await reader.read();
           if (done) break;
-          for (const ev of sse.push(value)) for (const out of parser.push(ev.data)) yield out;
+          for (const ev of sse.push(value)) for (const out of parser.push(ev.data)) { count(out); yield out; }
         }
-        for (const ev of sse.end()) for (const out of parser.push(ev.data)) yield out;
-        for (const out of parser.end()) yield out;
+        for (const ev of sse.end()) for (const out of parser.push(ev.data)) { count(out); yield out; }
+        for (const out of parser.end()) { count(out); yield out; }
       } catch (e) {
         if (e instanceof BridgeError) throw e;
         if (deadline.signal.aborted) throw deadline.abortError();
@@ -66,8 +72,9 @@ export async function* streamChat(a: StreamChatArgs): AsyncGenerator<StreamEvent
         if (deadline.signal.aborted) throw deadline.abortError();
         throw new BridgeError('protocol', 'The endpoint returned a response that is not valid JSON.');
       }
-      for (const out of adapter.parseResponse(json)) yield out;
+      for (const out of adapter.parseResponse(json)) { count(out); yield out; }
     }
+    log?.info(`Chat response: ${stableModelId(ep.id, a.model.id)} completed in ${Date.now() - started}ms (text chunks=${textChunks}, tool calls=${toolCalls})`);
   } finally {
     deadline.dispose();
   }

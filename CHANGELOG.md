@@ -1,11 +1,13 @@
 # Changelog
 
-## 0.2.0
-- New **LLM Bridge sidebar** (Activity Bar): endpoints and their models in a tree, API-key status per endpoint, inline Test / Set Key buttons, right-click actions, welcome screen with Add/Import.
-- Commands now accept an endpoint/model from the sidebar instead of always asking you to pick one. New: Refresh, Remove Model.
+## 1.0.0 — First release
 
-## 0.1.1
-- New extension icon: IIT DEVELOPER lotus on a square background (clearer at small sizes).
+Connect your own LLM endpoints to the native VS Code Chat model picker.
 
-## 0.1.0
-- Initial MVP: OpenAI Chat Completions, OpenAI Responses, Azure OpenAI v1 and legacy, Ollama adapters; discovery, tests, secure credentials, import/export.
+- **Protocols:** OpenAI Chat Completions, OpenAI Responses, Azure OpenAI (v1 and legacy deployments), Ollama's OpenAI-compatible API.
+- **Sidebar:** an Activity Bar view with your endpoints and models, API-key status, inline Test / Set Key buttons, right-click actions, and a welcome screen.
+- **Models:** automatic discovery with manual fallback, per-model tool-calling toggle (VS Code's Agent mode lists only models with tool calling), vision flag, context sizes.
+- **Testing and diagnostics:** Test Connection, Test Inference, and a redacted Diagnostics Log (one line per chat request; prompts and replies are never logged).
+- **Security:** API keys in VS Code SecretStorage bound to the endpoint's origin, user-settings-only endpoints, no cross-origin redirects, secret-free export/import.
+- **Streaming, cancellation, timeouts, retries**, and tool calls handed to VS Code (VS Code runs the tools and the approvals).
+- **No telemetry.** The extension only talks to the endpoints you configure.

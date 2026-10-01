@@ -6,7 +6,7 @@ import { authHeaders, assertCredentialBound, validateHeaders } from '../../src/c
 import { parseModelId, stableModelId } from '../../src/core/ids';
 import { SseParser } from '../../src/core/sse';
 import { validateEndpoint, validateEndpoints } from '../../src/core/config';
-import { resolveModels } from '../../src/core/models';
+import { resolveModels, withModelOverride } from '../../src/core/models';
 import { exportConfig, parseImport, originChanged } from '../../src/core/portable';
 import { estimateTextTokens } from '../../src/core/tokens';
 import { ep } from './helpers';
@@ -174,6 +174,23 @@ describe('config validation, manual fallback, import/export', () => {
     expect(originChanged(a, { ...a, baseUrl: 'https://evil.example/v1' })).toBe(true);
     expect(originChanged(a, { ...a, baseUrl: 'https://h/v2' })).toBe(false);
     expect(originChanged(undefined, a)).toBe(false);
+  });
+});
+
+describe('tool-calling override (Agent mode needs toolCalling=true)', () => {
+  it('discovered models default to no tool calling; override turns it on and is idempotent', () => {
+    const base = ep({ baseUrl: 'https://h' });
+    expect(resolveModels(base, [{ id: 'm' }])[0]!.toolCalling).toBe(false);
+    const on = withModelOverride(base, 'm', { toolCalling: true });
+    expect(resolveModels(on, [{ id: 'm' }])[0]).toMatchObject({ toolCalling: true, id: 'm' });
+    const off = withModelOverride(on, 'm', { toolCalling: false });
+    expect(off.models).toHaveLength(1);
+    expect(resolveModels(off, [{ id: 'm' }])[0]!.toolCalling).toBe(false);
+    expect(base.models).toBeUndefined(); // input not mutated
+  });
+  it('preserves other manual fields', () => {
+    const e = ep({ baseUrl: 'https://h', models: [{ id: 'm', name: 'Mine', maxInputTokens: 1234 }] });
+    expect(withModelOverride(e, 'm', { toolCalling: true }).models![0]).toEqual({ id: 'm', name: 'Mine', maxInputTokens: 1234, toolCalling: true });
   });
 });
 

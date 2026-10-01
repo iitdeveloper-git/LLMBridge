@@ -141,5 +141,5 @@ async function readErrorDetail(res: Response, cred?: Credential): Promise<string
     const m = j?.error?.message ?? j?.message ?? (typeof j?.error === 'string' ? j.error : undefined);
     if (typeof m === 'string') text = m;
   } catch { /* not JSON */ }
-  return redactText(text.replace(/\s+/g, ' ').trim(), cred ? [cred.secret] : []).slice(0, 300);
+  return redactText(text.replace(/\s+/g, ' ').trim(), cred ? [cred.secret] : []).slice(0, 900);
 }

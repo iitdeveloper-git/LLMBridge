@@ -2,7 +2,7 @@
   "name": "llm-bridge",
   "displayName": "LLM Bridge",
   "description": "Connect custom LLM endpoints (OpenAI-compatible, Responses, Azure OpenAI, Ollama) to the native VS Code Chat model picker. By IITDEVELOPER.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "publisher": "iitdeveloper",
   "license": "MIT",
   "icon": "media/icon-256.png",
@@ -130,6 +130,12 @@
         "title": "Remove Model",
         "category": "LLM Bridge",
         "icon": "$(trash)"
+      },
+      {
+        "command": "iitdeveloperLlmBridge.toggleToolCalling",
+        "title": "Toggle Tool Calling (Agent mode)",
+        "category": "LLM Bridge",
+        "icon": "$(tools)"
       }
     ],
     "configuration": {
@@ -369,11 +375,25 @@
           "command": "iitdeveloperLlmBridge.removeModel",
           "when": "view == iitdeveloperLlmBridge.endpoints && viewItem == model-manual",
           "group": "9_danger@1"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.toggleToolCalling",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem =~ /^model-/",
+          "group": "inline@2"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.toggleToolCalling",
+          "when": "view == iitdeveloperLlmBridge.endpoints && viewItem =~ /^model-/",
+          "group": "1_caps@1"
         }
       ],
       "commandPalette": [
         {
           "command": "iitdeveloperLlmBridge.removeModel",
+          "when": "false"
+        },
+        {
+          "command": "iitdeveloperLlmBridge.toggleToolCalling",
           "when": "false"
         }
       ]
@@ -387,7 +407,7 @@
     "build:dev": "node esbuild.mjs",
     "compile-tests": "tsc -p tsconfig.test.json",
     "test:integration": "npm run build:dev && npm run compile-tests && node out/test/integration/runTests.js",
-    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-0.2.0.vsix",
+    "package": "npm run build && vsce package --no-dependencies --allow-missing-repository -o llm-bridge-1.0.0.vsix",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "devDependencies": {

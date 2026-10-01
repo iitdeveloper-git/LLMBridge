@@ -34,6 +34,7 @@ export class BridgeProvider implements vscode.LanguageModelChatProvider, vscode.
       }
       for (const m of resolveModels(ep, this.store.discovered(ep.id))) out.push(toInfo(ep, m));
     }
+    this.log.info(`Model list requested by VS Code (silent=${options.silent}): returning ${out.length} model(s) from ${endpoints.length} endpoint(s), ${out.filter((m) => m.capabilities.toolCalling).length} with tool calling`);
     return out;
   }
 

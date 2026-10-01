@@ -1,4 +1,4 @@
-# Requirements → verification matrix (v0.2.0)
+# Requirements → verification matrix (v1.0.0)
 
 Legend — **U**: unit test against a real local HTTP server (no real provider) · **H**: Extension Development Host test on VS Code 1.140.0
 (real `vscode.lm` API, mock HTTP server) · **S**: scripted lifecycle (`scripts/verify-vsix-lifecycle.sh`) · **M**: manual steps required · **—**: not verified.
@@ -18,7 +18,7 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 | 12 | No Copilot dependency; graceful absence | H (manifest has no `extensionDependencies`, no "copilot" string); runs where Copilot is absent | `extension.test.ts` |
 | 13 | Listed test areas | U: URL, auth, redaction, discovery, manual fallback, stable IDs, streaming, **split UTF-8/SSE (every byte boundary + byte-by-byte + 3-byte network chunks)**, tool round trips, cancellation, timeouts (connect + idle), retries, credential binding, cross-origin redirects | `test/unit/*` |
 | 14 | typecheck, lint, unit, integration, build, EDH tests, install/uninstall | `npm run verify`, `npm run test:integration`, lifecycle script | see report |
-| 15 | Local VSIX, no Marketplace publish | `llm-bridge-0.2.0.vsix` | repo root |
+| 15 | Local VSIX, no Marketplace publish | `llm-bridge-1.0.0.vsix` | repo root |
 
 ## Known limits / not verified
 
@@ -28,3 +28,5 @@ Legend — **U**: unit test against a real local HTTP server (no real provider) 
 - **Native UI**: command wizards, the picker's management gear, the notifications and modal import review were not driven by automation.
 - Token counts are heuristic. Tool-calling and vision are never auto-detected: declare them per model.
 - Default VS Code behavior: if no other chat model is available, VS Code itself may pick a third-party model as the Chat default (observed in the sandbox log). LLM Bridge never writes a model-selection setting.
+
+- **Strict-server compatibility**: `scripts/check-wire-schema.sh` validates generated Chat Completions and Responses bodies against OpenAI's typed schemas (the kind servers such as vLLM validate with). It is a schema check, not a test against a real vLLM server.

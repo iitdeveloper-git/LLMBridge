@@ -1,4 +1,4 @@
-import type { DiscoveredModel, EndpointConfig, ResolvedModel } from './types';
+import type { DiscoveredModel, EndpointConfig, ModelConfig, ResolvedModel } from './types';
 
 export const DEFAULT_MAX_INPUT = 128_000;
 export const DEFAULT_MAX_OUTPUT = 16_384;
@@ -20,4 +20,13 @@ export function resolveModels(ep: EndpointConfig, discovered: readonly Discovere
     });
   }
   return [...out.values()];
+}
+
+/** Returns a copy of `ep` with `patch` applied to model `id`; creates a manual override entry if none exists (manual wins over discovery). */
+export function withModelOverride(ep: EndpointConfig, id: string, patch: Partial<ModelConfig>): EndpointConfig {
+  const models = [...(ep.models ?? [])];
+  const i = models.findIndex((m) => m.id === id);
+  if (i >= 0) models[i] = { ...models[i]!, ...patch, id };
+  else models.push({ ...patch, id });
+  return { ...ep, models };
 }

@@ -132,11 +132,12 @@ describe('OpenAI Responses API', () => {
     expect(evs.find((x) => x.type === 'toolCall')).toEqual({ type: 'toolCall', call: { id: 'call_9', name: 'f', args: { x: 1 } } });
     const b1 = JSON.parse(s.requests[0]!.body);
     expect(s.requests[0]!.url).toBe('/v1/responses');
-    expect(b1).toMatchObject({ model: 'm', stream: true, store: false, instructions: 'be brief', input: [{ role: 'user', content: [{ type: 'input_text', text: 'go' }] }], tools: [{ type: 'function', name: 'f' }] });
+    expect(b1).toMatchObject({ model: 'm', stream: true, store: false, instructions: 'be brief', input: [{ role: 'user', content: 'go' }], tools: [{ type: 'function', name: 'f', strict: false }] });
 
     const second = await collect(run(e, { request: { messages: [user('go'), { role: 'assistant', parts: [], toolCalls: [{ id: 'call_9', name: 'f', args: { x: 1 } }] }, { role: 'tool', toolCallId: 'call_9', parts: [{ type: 'text', text: 'res' }] }] } }));
     expect(text(second)).toBe('done');
     const input = JSON.parse(s.requests[1]!.body).input;
+    expect(input[0]).toEqual({ role: 'user', content: 'go' });
     expect(input[1]).toEqual({ type: 'function_call', call_id: 'call_9', name: 'f', arguments: '{"x":1}' });
     expect(input[2]).toEqual({ type: 'function_call_output', call_id: 'call_9', output: 'res' });
   });
@@ -150,6 +151,24 @@ describe('OpenAI Responses API', () => {
     const e = ep({ protocol: 'openai-responses', baseUrl: s.origin, auth: 'none' });
     expect(await collect(run(e, { model: { id: 'm', streaming: false } }))).toEqual([{ type: 'text', text: 'ok' }, { type: 'toolCall', call: { id: 'c', name: 'f', args: {} } }]);
     await expect(collect(run(e))).rejects.toThrow(/boom/);
+  });
+});
+
+describe('Responses API strict-server compatibility (vLLM / OpenAI schema)', () => {
+  it('assistant history is plain string content, never output_text parts', async () => {
+    const s = await start((_r, res) => { res.writeHead(200, sseHeaders); res.end(sseData({ type: 'response.output_text.delta', delta: 'x' })); });
+    const e = ep({ protocol: 'openai-responses', baseUrl: s.origin, auth: 'none' });
+    await collect(run(e, { request: { messages: [user('hi'), { role: 'assistant', parts: [{ type: 'text', text: 'Hello!' }] }, user('again')] } }));
+    expect(JSON.parse(s.requests[0]!.body).input).toEqual([
+      { role: 'user', content: 'hi' }, { role: 'assistant', content: 'Hello!' }, { role: 'user', content: 'again' },
+    ]);
+    expect(s.requests[0]!.body).not.toContain('output_text');
+  });
+  it('images carry detail:auto', async () => {
+    const s = await start((_r, res) => { res.writeHead(200, sseHeaders); res.end(sseData({ type: 'response.output_text.delta', delta: 'x' })); });
+    const e = ep({ protocol: 'openai-responses', baseUrl: s.origin, auth: 'none' });
+    await collect(run(e, { request: { messages: [{ role: 'user', parts: [{ type: 'text', text: 'see' }, { type: 'image', mime: 'image/png', base64: 'AAAA' }] }] } }));
+    expect(JSON.parse(s.requests[0]!.body).input[0].content[1]).toEqual({ type: 'input_image', detail: 'auto', image_url: 'data:image/png;base64,AAAA' });
   });
 });
 
@@ -280,6 +299,20 @@ describe('errors, retries, timeouts, cancellation', () => {
     const pre = new AbortController(); pre.abort();
     await expect(collect(run(ep({ baseUrl: s.origin, auth: 'none' }), { signal: pre.signal }))).rejects.toMatchObject({ kind: 'cancelled' });
   }, 10000);
+});
+
+describe('request logging', () => {
+  it('logs request + completion metadata at info level, never prompt or response text', async () => {
+    const lines: string[] = [];
+    const log = { error: (m: string) => lines.push(m), info: (m: string) => lines.push(m), debug: (m: string) => lines.push(m) };
+    const s = await start((_r, res) => { res.writeHead(200, sseHeaders); res.end(sseData({ choices: [{ delta: { content: 'SECRET-ANSWER' } }] })); });
+    await collect(run(ep({ baseUrl: s.origin, auth: 'none' }), { request: { messages: [user('SECRET-PROMPT')] }, deps: { sleep: noSleep, log } }));
+    const all = lines.join('\n');
+    expect(all).toMatch(/Chat request: test::m POST .*\/chat\/completions stream=true messages=1 tools=0/);
+    expect(all).toMatch(/Chat response: test::m completed in \d+ms \(text chunks=1, tool calls=0\)/);
+    expect(all).not.toContain('SECRET-PROMPT');
+    expect(all).not.toContain('SECRET-ANSWER');
+  });
 });
 
 describe('credential safety over the wire', () => {

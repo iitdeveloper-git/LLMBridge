@@ -11,9 +11,9 @@ JSON
 cp "$SB/user-data/User/settings.json" "$SB/before.json"
 args=(--user-data-dir "$SB/user-data" --extensions-dir "$SB/ext")
 if [ "${WITH_COPILOT:-0}" = 1 ]; then "$CODE" "${args[@]}" --install-extension GitHub.copilot-chat || true; fi
-"$CODE" "${args[@]}" --install-extension "$ROOT/llm-bridge-0.2.0.vsix"
+"$CODE" "${args[@]}" --install-extension "$ROOT/llm-bridge-1.0.0.vsix"
 "$CODE" "${args[@]}" --list-extensions --show-versions | tee "$SB/installed.txt"
-grep -q '^iitdeveloper.llm-bridge@0.2.0$' "$SB/installed.txt"
+grep -q '^iitdeveloper.llm-bridge@1.0.0$' "$SB/installed.txt"
 cmp "$SB/before.json" "$SB/user-data/User/settings.json" && echo "OK: settings unchanged after install"
 "$CODE" "${args[@]}" --uninstall-extension iitdeveloper.llm-bridge
 "$CODE" "${args[@]}" --list-extensions | grep -q 'iitdeveloper.llm-bridge' && { echo "FAIL: still installed"; exit 1; } || echo "OK: uninstalled"

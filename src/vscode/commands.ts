@@ -3,7 +3,7 @@ import { getAdapter } from '../core/adapters';
 import { validateEndpoint } from '../core/config';
 import { discoverModels, testConnection, testInference } from '../core/discovery';
 import { BridgeError } from '../core/errors';
-import { resolveModels } from '../core/models';
+import { resolveModels, withModelOverride } from '../core/models';
 import { exportConfig, originChanged, parseImport } from '../core/portable';
 import { PROTOCOLS, type EndpointConfig, type Logger, type ModelConfig, type Protocol } from '../core/types';
 import { parseBaseUrl } from '../core/url';
@@ -64,7 +64,7 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
       const models = await discoverModels(ep, await creds.get(ep.id), ac.signal, { log });
       await store.setDiscovered(ep.id, models);
       provider.refresh();
-      void vscode.window.showInformationMessage(`Found ${models.length} model(s) on ${ep.name}. Select them in the Chat model picker.`);
+      void vscode.window.showInformationMessage(`Found ${models.length} model(s) on ${ep.name}. In Agent mode VS Code only lists models with tool calling: right-click a model → Toggle Tool Calling (or use Ask mode).`);
     });
 
   reg('manage', async () => {
@@ -97,7 +97,14 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'endpoint';
     let id = slug.length >= 2 ? slug : `${slug}-1`;
     for (let i = 2; endpoints.some((e) => e.id === id); i++) id = `${slug}-${i}`;
-    const v = validateEndpoint({ id, name, protocol: proto.p, baseUrl: baseUrl.trim(), apiVersion, models: [] });
+    const tc = await vscode.window.showQuickPick(
+      [
+        { label: 'Yes, they support tool calling', description: 'Models show up in Agent mode (VS Code lists only models with tool calling there)', value: true },
+        { label: 'No / not sure', description: 'Use Ask mode; you can enable it per model later in the sidebar', value: false },
+      ],
+      { title: 'Do this endpoint\'s models support tool / function calling?', placeHolder: 'Only choose Yes if you know your models support tool calls', ignoreFocusOut: true },
+    );
+    const v = validateEndpoint({ id, name, protocol: proto.p, baseUrl: baseUrl.trim(), apiVersion, assumeToolCalling: tc?.value === true ? true : undefined, models: [] });
     if (!v.endpoint) throw new BridgeError('config', v.errors.join(' '));
     await store.write([...endpoints, v.endpoint]);
     const adapter = getAdapter(v.endpoint);
@@ -162,6 +169,19 @@ export function registerCommands(ctx: vscode.ExtensionContext, store: EndpointSt
     const eps = store.read().endpoints.map((e) => (e.id === ep.id ? { ...e, models: [...(e.models ?? []).filter((m) => m.id !== model.id), model] } : e));
     await store.write(eps);
     provider.refresh();
+  });
+
+  reg('toggleToolCalling', async (arg?: unknown) => {
+    const { endpointId, modelId } = fromArg(arg);
+    const ep = store.read().endpoints.find((e) => e.id === endpointId);
+    const model = ep && resolveModels(ep, store.discovered(ep.id)).find((m) => m.id === modelId);
+    if (!ep || !model) throw new BridgeError('config', 'Select a model in the LLM Bridge sidebar first.');
+    const next = !model.toolCalling;
+    await store.write(store.read().endpoints.map((e) => (e.id === ep.id ? withModelOverride(e, model.id, { toolCalling: next }) : e)));
+    provider.refresh();
+    void vscode.window.showInformationMessage(next
+      ? `Tool calling ON for ${model.name}. It will now appear in Agent mode. Only keep this on if the model really supports tool calls.`
+      : `Tool calling OFF for ${model.name}. It is hidden in Agent mode; use Ask mode to chat with it.`);
   });
 
   reg('removeModel', async (arg?: unknown) => {

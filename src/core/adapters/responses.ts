@@ -13,15 +13,21 @@ export function toResponsesInput(messages: ChatMessage[]): { instructions?: stri
     } else if (m.role === 'tool') {
       input.push({ type: 'function_call_output', call_id: m.toolCallId, output: textOf(m) });
     } else if (m.role === 'assistant') {
+      // Plain string content: strict servers (e.g. vLLM) reject `output_text` parts in input items.
       const text = textOf(m);
-      if (text) input.push({ role: 'assistant', content: [{ type: 'output_text', text }] });
+      if (text) input.push({ role: 'assistant', content: text });
       for (const c of m.toolCalls ?? []) input.push({ type: 'function_call', call_id: c.id, name: c.name, arguments: JSON.stringify(c.args) });
     } else {
+      const hasImage = m.parts.some((p) => p.type === 'image');
       input.push({
         role: 'user',
-        content: m.parts.map((p) =>
-          p.type === 'text' ? { type: 'input_text', text: p.text } : { type: 'input_image', image_url: `data:${p.mime};base64,${p.base64}` },
-        ),
+        content: hasImage
+          ? m.parts.map((p) =>
+              p.type === 'text'
+                ? { type: 'input_text', text: p.text }
+                : { type: 'input_image', detail: 'auto', image_url: `data:${p.mime};base64,${p.base64}` },
+            )
+          : textOf(m),
       });
     }
   }
@@ -41,7 +47,8 @@ export function buildResponsesBody(req: ChatRequest): Record<string, unknown> {
   const effort = req.modelOptions?.reasoning_effort;
   if (typeof effort === 'string') body.reasoning = { effort };
   if (req.tools?.length) {
-    body.tools = req.tools.map((t) => ({ type: 'function', name: t.name, description: t.description, parameters: t.parameters }));
+    // strict:false is explicit: the Responses API defaults it to true, which rejects most tool schemas that VS Code sends.
+    body.tools = req.tools.map((t) => ({ type: 'function', name: t.name, description: t.description, parameters: t.parameters, strict: false }));
     if (req.toolChoice === 'required') body.tool_choice = 'required';
   }
   return body;

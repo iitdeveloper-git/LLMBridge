@@ -11,7 +11,7 @@
 Developed with ❤️ by **[IITDEVELOPER](https://github.com/iitdeveloper-git)**
 
 [![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.104.0-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.2.0-6366f1?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/package.json)
+[![Version](https://img.shields.io/badge/version-1.0.0-6366f1?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/package.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](https://github.com/iitdeveloper-git/LLMBridge/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Keys](https://img.shields.io/badge/Keys-SecretStorage-success?style=for-the-badge&logo=shield)](#️-security--privacy-first)
@@ -46,6 +46,7 @@ Connect your own self-hosted or enterprise LLM endpoints directly to the **nativ
 | Feature | Highlight |
 | :--- | :--- |
 | 🎯 **Native Experience** | Zero custom webviews or chat tabs. Appears right inside VS Code's native Chat dropdown & Agent Mode. |
+| 🧭 **Sidebar** | An Activity Bar view with your endpoints and models, key status, and one-click Test / Set Key / Discover / Toggle Tool Calling. |
 | 🔐 **Origin-Bound Vault** | API keys live solely inside VS Code's encrypted `SecretStorage`, strictly bound to the target origin URL. |
 | ⚡ **One-Click Discovery** | Automatic `/models` endpoint discovery with fallback to manual model and context sizing. |
 | 🧪 **In-Editor Diagnostics** | Real-time connection and inference smoke tests with zero prompt or output leakage. |
@@ -123,18 +124,17 @@ Every action is also available from the Command Palette (`LLM Bridge: …`).
 
 ## 🚀 Quick Start
 
-### 1️⃣ Add Endpoint
-Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) and run:
-```text
-LLM Bridge: Add Endpoint
-```
-*(Or click the gear icon ⚙️ next to **Manage Models** → **LLM Bridge (IITDEVELOPER)**)*.
+### 1️⃣ Add an endpoint
+Click the **LLM Bridge** (lotus) icon in the Activity Bar and press **+**, or run `LLM Bridge: Add Endpoint` from the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
 
-### 2️⃣ Configure & Authenticate
-Select your protocol, enter a friendly name, provide the base URL, and input your API key. Keys are instantly encrypted and saved to VS Code's `SecretStorage`.
+### 2️⃣ Configure and authenticate
+Choose the protocol, a name, and the **base URL** (e.g. `https://my-server.example.com/v1`, without `/chat/completions`), then enter your API key if the server needs one. Keys go to VS Code's `SecretStorage`. The wizard also asks whether the models support **tool calling**: answer *Yes* only if you know they do (VS Code's Agent mode lists only such models).
 
-### 3️⃣ Discover & Chat
-Models are discovered automatically via `/models`. Open your VS Code Chat panel (`Ctrl+Alt+I` / `Cmd+Ctrl+I`), switch the model picker to your new endpoint, and start prompting!
+### 3️⃣ Check it works
+In the sidebar, click **Test Connection**, then **Test Inference** on a model. If the server has no `/models` endpoint, use **Add Model Manually**.
+
+### 4️⃣ Chat
+Open the Chat panel (`Ctrl+Alt+I` / `Cmd+Ctrl+I`), open the model dropdown, and choose your model. Then run **LLM Bridge: Show Diagnostics Log** to confirm the request reached your server. See [My model is not in the model picker](#-my-model-is-not-in-the-model-picker) if it is missing.
 
 ---
 
@@ -197,7 +197,15 @@ Security is baked into LLM Bridge by design, not bolted on as an afterthought:
 
 - **🚫 Zero Redirect Key Leakage:** Cross-origin redirects are never followed with authorization headers. Non-307/308 POST redirects are explicitly rejected.
 - **🔒 TLS Enforcement:** TLS certificate verification can never be disabled for remote hosts. Insecure plain `http://` is restricted to loopback interfaces (`localhost`, `127.0.0.1`).
-- **🩺 Redacted Logs:** Diagnostics and test commands strictly log HTTP status and response lengths. **Your prompts, file contents, code, and completions are never logged or stored.**
+- **🩺 Redacted Logs:** The diagnostics log records only metadata: model, endpoint path, message and tool counts, status and timing. **Your prompts, file contents, code, and replies are never logged or stored.**
+
+---
+
+## 🔏 Privacy
+
+- **No telemetry.** LLM Bridge has no analytics code and no runtime dependencies.
+- **It only talks to the endpoints you configure.** There is no IIT DEVELOPER server. With a local model (e.g. `http://localhost:11434/v1`) your prompts never leave your computer.
+- Choosing a different model in the Chat dropdown (e.g. Copilot *Auto*) sends that chat to that provider instead, and VS Code has its own telemetry setting (`telemetry.telemetryLevel`).
 
 ---
 
@@ -218,7 +226,11 @@ Search `LLM Bridge:` in the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 | `LLM Bridge: Add Model Manually` | Define custom model identifier, token limits, and tools |
 | `LLM Bridge: Export Configuration` | Export sanitised JSON configuration without secrets |
 | `LLM Bridge: Import Configuration` | Safe import with change preview and origin validation |
-| `LLM Bridge: Show Diagnostics Log` | Open extension telemetry and troubleshooting output channel |
+| `LLM Bridge: Show Diagnostics Log` | Open the (redacted, local) troubleshooting log. Not telemetry; nothing is uploaded |
+| `LLM Bridge: Edit Endpoints in settings.json` | Open your user settings to edit endpoints and models directly |
+| `LLM Bridge: Refresh` | Reload the sidebar and the model list |
+
+Sidebar-only actions (right-click or inline buttons on a model): **Toggle Tool Calling**, **Remove Model**.
 
 ---
 
@@ -231,12 +243,44 @@ Search `LLM Bridge:` in the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`):
 
 ---
 
+## 🧰 My model is not in the model picker
+
+VS Code's **Agent** mode only lists models that declare **tool calling**, and LLM Bridge does not assume your model supports it. Two fixes:
+
+1. **Turn tool calling on** (only if your model really supports tool/function calls): in the LLM Bridge sidebar, click the 🛠 button on the model (or right-click → *Toggle Tool Calling*). Or set `"toolCalling": true` on the model, or `"assumeToolCalling": true` on the endpoint.
+2. **Or switch Chat to Ask mode**, where models without tool calling are listed.
+
+Still missing? Open **Manage Models…** in the picker and make sure **LLM Bridge (IITDEVELOPER)** is enabled.
+
+---
+
+## 🧪 Using vLLM, LiteLLM or another OpenAI-compatible server
+
+- **Start with `openai-chat`** (`/v1/chat/completions`). It is the most widely implemented format.
+- Use `openai-responses` only if your server implements `/v1/responses`. LLM Bridge's Responses requests are validated against OpenAI's typed request schemas (`scripts/check-wire-schema.sh`), but servers differ, so run **Test Inference** and chat once with history (send two messages).
+- If a request fails with HTTP 400, the full server message (up to 900 characters) is shown in the error. Open **LLM Bridge: Show Diagnostics Log** and report it with your server name and version.
+
+---
+
+## ✅ How to confirm a reply came from your endpoint
+
+Chat can silently fall back to another model (e.g. Copilot **Auto**) if yours isn't selected. After sending a message, run **LLM Bridge: Show Diagnostics Log**. You should see:
+
+```text
+Chat request: my-endpoint::my-model POST https://…/v1/chat/completions stream=true messages=1 tools=0
+Chat response: my-endpoint::my-model completed in 842ms (text chunks=37, tool calls=0)
+```
+
+No `Chat request` line means the reply came from a different model. If your models are missing from the model picker, open **Manage Models…** in the picker and enable **LLM Bridge (IITDEVELOPER)**. If VS Code instead says you must set up GitHub Copilot and sign in to use Chat (reported on one machine), sign in; the free plan is enough to try. VS Code's docs say custom models do not require a Copilot plan, so this may depend on your VS Code version.
+
+---
+
 ## ⚠️ Known Limitations
 
-- **Tested against mock servers only.** The protocol adapters are verified with local test servers built from the public wire formats. No real OpenAI, Azure or Ollama endpoint was used in automated tests. Use **Test Inference** on yours.
-- **Copilot coexistence is not automatically verified.** Copilot's settings and credentials are never touched (tested in a sandbox without Copilot Chat loaded); check manually that your Copilot models and selection are unchanged.
-- **Agent mode depends on the model.** LLM Bridge only returns tool calls to VS Code; VS Code runs tools and approvals. Set `toolCalling: true` only for models that support it. Whether a model works well in Agent mode is not guaranteed.
-- **Token counts are estimates** (~4 chars/token). Tool calling and vision are never auto-detected.
+- **Real-service testing is limited.** Automated tests use local mock servers, plus a schema check of the request formats against OpenAI's typed schemas. The author also tested end to end in VS Code 1.140 with gpt-oss models on OpenAI-compatible endpoints. Azure OpenAI, Ollama and the Responses protocol are not verified on real services, so use **Test Inference** on yours.
+- **Copilot coexistence is not automatically verified.** LLM Bridge never reads or writes Copilot's settings or credentials (tested in a sandbox without Copilot Chat loaded); check manually that your Copilot models and selection are unchanged.
+- **Tool calling and vision are never auto-detected.** Declare them per model (the sidebar toggle, `toolCalling` / `vision`). Whether a model behaves well in Agent mode depends on the model; VS Code runs the tools and approvals.
+- **Token counts are estimates** (~4 chars/token), not billing figures.
 - **Not supported yet:** Anthropic Messages, reasoning/thinking output, Bedrock, Vertex. Azure legacy has no model listing: add deployment names manually.
 - **Availability** of third-party models in Chat can depend on your VS Code/Copilot plan and organization policy.
 
@@ -264,7 +308,7 @@ npm run test:integration
 
 # 4. Package local VSIX installer
 npm run package
-code --install-extension llm-bridge-0.2.0.vsix
+code --install-extension llm-bridge-1.0.0.vsix
 ```
 
 See [REQUIREMENTS-MATRIX.md](docs/REQUIREMENTS-MATRIX.md) for full requirement-to-test traceability.
